@@ -8,42 +8,52 @@ ChessPiece::ChessPiece(Color color)
 
 }
 
+void ChessPiece::beginMove()
+{
+    isMoving_ = true;
+}
+
+void ChessPiece::endMove()
+{
+    drawAt(rowOnBoard(), columnOnBoard());
+
+    isMoving_ = false;
+}
+
 void ChessPiece::moveTo(unsigned rowOnBoard, unsigned columnOnBoard)
 {
-    rowOnBoard_ = rowOnBoard;
-    columnOnBoard_ = columnOnBoard;
+    rowOnBoard_     = rowOnBoard;
+    columnOnBoard_  = columnOnBoard;
+
+    drawAt(this->rowOnBoard(), this->columnOnBoard());
+}
+
+void ChessPiece::drawAt(unsigned rowOnBoard, unsigned columnOnBoard)
+{
+    rowToDrawAt_    = rowOnBoard;
+    columnToDrawAt_ = columnOnBoard;
 }
 
 bool ChessPiece::occupies(int x, int y) const noexcept
 {
-#if 0
-    auto const bounds = sprite().getLocalBounds();
-
-    printf("x: %i left: %f right  %f\n", x, bounds.left, bounds.left + bounds.width);
-    printf("y: %i top : %f bottom %f\n", y, bounds.top, bounds.top - bounds.height);
-
-    auto const occupiesX = (x > bounds.left && x < bounds.left + bounds.width);
-    auto const occupiesY = (y < bounds.top && y > bounds.top - bounds.height);
-
-    if (occupiesX || occupiesY) {
-        printf("occupies: ");
-        if (occupiesX) {
-            printf("x");
-        }
-        if(occupiesY) {
-            printf(" y");
-        }
-        printf("\n");
-    }
-#endif
-    auto const occupiesX = (x > (columnOnBoard_ * tileWidth_) && x < ((columnOnBoard_ + 1) * tileWidth_));
-    auto const occupiesY = (y > (rowOnBoard_ * tileHeight_)   && y < ((rowOnBoard_ + 1) * tileHeight_));
+    auto const occupiesX = (x > (columnOnBoard_ * tileWidth_)  && x < ((columnOnBoard_ + 1) * tileWidth_));
+    auto const occupiesY = (y > (rowOnBoard_    * tileHeight_) && y < ((rowOnBoard_    + 1) * tileHeight_));
 
     if (occupiesX && occupiesY) {
         return true;
     }
 
     return false;
+}
+
+unsigned ChessPiece::rowOnBoard() const noexcept
+{
+    return rowOnBoard_;
+}
+
+unsigned ChessPiece::columnOnBoard() const noexcept
+{
+    return columnOnBoard_;
 }
 
 ChessPiece::Color ChessPiece::color() const noexcept
@@ -59,15 +69,13 @@ void ChessPiece::draw(sf::RenderTarget& target, sf::RenderStates states) const
     // time we draw
     auto& s = sprite();
 
-    //s.setScale(scale_);
-
     auto const bounds = s.getGlobalBounds();
 
     s.scale({tileWidth_ / bounds.width, tileHeight_ / bounds.height});
 
     // this assumes that all pieces have the
     // same dimensions as a tile
-    s.setPosition(columnOnBoard_ * bounds.width, rowOnBoard_ * bounds.height);
+    s.setPosition(columnToDrawAt_ * bounds.width, rowToDrawAt_ * bounds.height);
 
     target.draw(s, states);
 }
@@ -97,7 +105,7 @@ void ChessPiece::draw(sf::RenderTarget& target, sf::RenderStates states) const
     setTextureAndSprite<Color::Black, Type::Bishop>("../src/res/b_bishop_1x_ns.png");
     setTextureAndSprite<Color::Black, Type::Rook>  ("../src/res/b_rook_1x_ns.png");
     setTextureAndSprite<Color::Black, Type::Queen> ("../src/res/b_queen_1x_ns.png");
-    //setTextureAndSprite<Color::Black, Type::King>  ("../src/res/b_king_1x_ns.png");
+    setTextureAndSprite<Color::Black, Type::King>  ("../src/res/b_king_1x_ns.png");
 }
 
 sf::Sprite& ChessPiece::sprite()
@@ -146,8 +154,8 @@ template<ChessPiece::Color C, ChessPiece::Type T>
 }
 
 template<ChessPiece::Type T> 
-/*static*/ void ChessPiece::setTextureAndSpriteImpl(std::array<sf::Texture, 8>& textures, 
-                                                    std::array<sf::Sprite, 8>& sprites,
+/*static*/ void ChessPiece::setTextureAndSpriteImpl(std::array<sf::Texture, 6>& textures, 
+                                                    std::array<sf::Sprite, 6>& sprites,
                                                     std::string const & fileName)
 {
     static constexpr auto index = static_cast<size_t>(T);
@@ -156,4 +164,50 @@ template<ChessPiece::Type T>
     sprites[index].setTexture(textures[index]);
 
     assert(result);
+}
+
+bool Pawn::canMoveTo(unsigned newRow, unsigned newColumn)
+{
+    // white pawns move up (negative), blacks down
+    auto const forwardDirection = color() == Color::White ? -1 : 1;
+
+    auto result = (newColumn == columnOnBoard()) && (newRow == rowOnBoard() + forwardDirection);
+
+    if (!result) {
+        printf("failed. row: %u\tnewRow: %u\tcolumn: %u\tnewColumn: %u\n",
+               rowOnBoard(),
+               newRow,
+               columnOnBoard(),
+               newColumn);
+    }
+    else {
+        printf("success!\n");
+    }
+
+    return result;
+}
+
+bool Knight::canMoveTo(unsigned newRow, unsigned newColumn)
+{
+    return true;
+}
+
+bool Bishop::canMoveTo(unsigned newRow, unsigned newColumn)
+{
+    return true;
+}
+
+bool Rook::canMoveTo(unsigned newRow, unsigned newColumn)
+{
+    return true;
+}
+
+bool Queen::canMoveTo(unsigned newRow, unsigned newColumn)
+{
+    return true;
+}
+
+bool King::canMoveTo(unsigned newRow, unsigned newColumn)
+{
+    return true;
 }
