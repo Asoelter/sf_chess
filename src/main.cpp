@@ -110,6 +110,8 @@ int main()
         window.display();
     }
 
+    ChessPiece::deInit();
+
     return 0;
 }
 

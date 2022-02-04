@@ -4,6 +4,7 @@
 #include <SFML/Graphics.hpp>
 
 #include <array>
+#include <optional>
 
 class ChessPiece : public sf::Drawable
 {
@@ -43,30 +44,50 @@ public:
 
     static void setTileSize(float tileWidth, float tileHeight);
     static void setScale(sf::Vector2f const & scale);
+    static void deInit();
 
 protected:
     sf::Sprite& sprite();
     sf::Sprite& sprite() const;
 
 private:
+    template<typename T>
+    using Deferred = std::optional<T>;
+
+    template<typename T, size_t S>
+    using DeferredArray = std::array<Deferred<T>, S>;
+
+private:
+
     static void initialize();
 
     template<Color C, Type T> 
     static void setTextureAndSprite(std::string const & fileName);
 
     template<Type T> 
-    static void setTextureAndSpriteImpl(std::array<sf::Texture, 6>& textures,
-                                        std::array<sf::Sprite, 6>& sprites,
+    static void setTextureAndSpriteImpl(DeferredArray<sf::Texture, 6>& textures,
+                                        DeferredArray<sf::Sprite, 6>& sprites,
                                         std::string const & fileName);
 
 private:
+    template<typename T>
+    using Deferred = std::optional<T>;
+
+    template<typename T, size_t S>
+    using DeferredArray = std::array<Deferred<T>, S>;
+
     inline static auto initialized_ = false;;
 
-    inline static std::array<sf::Texture, 6> whiteTextures_;
-    inline static std::array<sf::Texture, 6> blackTextures_;
+    // Deferring the initialization of these is necessary because
+    // there's a bug in the library that gets triggered on windows
+    // where destroying these at the of the programs causes the
+    // program to crash. So, we need more control over the lifetime
+    // of these objects
+    inline static DeferredArray<sf::Texture, 6> whiteTextures_;
+    inline static DeferredArray<sf::Texture, 6> blackTextures_;
 
-    inline static std::array<sf::Sprite, 6> whiteSprites_;
-    inline static std::array<sf::Sprite, 6> blackSprites_;
+    inline static DeferredArray<sf::Sprite, 6> whiteSprites_;
+    inline static DeferredArray<sf::Sprite, 6> blackSprites_;
 
     inline static auto scale_       = sf::Vector2f(1, 1);
     inline static auto tileWidth_   = 0.0f;

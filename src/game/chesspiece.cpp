@@ -1,5 +1,6 @@
 #include "chesspiece.h"
 
+#include <cassert>
 #include <cstdio>
 
 ChessPiece::ChessPiece(Color color)
@@ -75,7 +76,7 @@ void ChessPiece::draw(sf::RenderTarget& target, sf::RenderStates states) const
 
     // this assumes that all pieces have the
     // same dimensions as a tile
-    s.setPosition(columnToDrawAt_ * bounds.width, rowToDrawAt_ * bounds.height);
+    s.setPosition({ columnToDrawAt_ * bounds.width, rowToDrawAt_ * bounds.height });
 
     target.draw(s, states);
 }
@@ -91,8 +92,56 @@ void ChessPiece::draw(sf::RenderTarget& target, sf::RenderStates states) const
     scale_ = scale;
 }
 
+/*static*/ void ChessPiece::deInit()
+{
+
+    whiteTextures_[static_cast<size_t>(Type::Pawn)] = std::nullopt;
+    whiteTextures_[static_cast<size_t>(Type::Knight)] = std::nullopt;
+    whiteTextures_[static_cast<size_t>(Type::Bishop)] = std::nullopt;
+    whiteTextures_[static_cast<size_t>(Type::Rook)] = std::nullopt;
+    whiteTextures_[static_cast<size_t>(Type::Queen)] = std::nullopt;
+    whiteTextures_[static_cast<size_t>(Type::King)] = std::nullopt;
+
+    blackTextures_[static_cast<size_t>(Type::Pawn)] = std::nullopt;
+    blackTextures_[static_cast<size_t>(Type::Knight)] = std::nullopt;
+    blackTextures_[static_cast<size_t>(Type::Bishop)] = std::nullopt;
+    blackTextures_[static_cast<size_t>(Type::Rook)] = std::nullopt;
+    blackTextures_[static_cast<size_t>(Type::Queen)] = std::nullopt;
+    blackTextures_[static_cast<size_t>(Type::King)] = std::nullopt;
+
+    whiteSprites_[static_cast<size_t>(Type::Pawn)] = std::nullopt;
+    whiteSprites_[static_cast<size_t>(Type::Knight)] = std::nullopt;
+    whiteSprites_[static_cast<size_t>(Type::Bishop)] = std::nullopt;
+    whiteSprites_[static_cast<size_t>(Type::Rook)] = std::nullopt;
+    whiteSprites_[static_cast<size_t>(Type::Queen)] = std::nullopt;
+    whiteSprites_[static_cast<size_t>(Type::King)] = std::nullopt;
+
+    blackSprites_[static_cast<size_t>(Type::Pawn)] = std::nullopt;
+    blackSprites_[static_cast<size_t>(Type::Knight)] = std::nullopt;
+    blackSprites_[static_cast<size_t>(Type::Bishop)] = std::nullopt;
+    blackSprites_[static_cast<size_t>(Type::Rook)] = std::nullopt;
+    blackSprites_[static_cast<size_t>(Type::Queen)] = std::nullopt;
+    blackSprites_[static_cast<size_t>(Type::King)] = std::nullopt;
+}
+
 /*static*/ void ChessPiece::initialize()
 {
+    //TODO(asoelter): pull in the file finder the other project
+#if defined(WIN32)
+    setTextureAndSprite<Color::White, Type::Pawn>  ("../../../../src/res/w_pawn_1x_ns.png");
+    setTextureAndSprite<Color::White, Type::Knight>("../../../../src/res/w_knight_1x_ns.png");
+    setTextureAndSprite<Color::White, Type::Bishop>("../../../../src/res/w_bishop_1x_ns.png");
+    setTextureAndSprite<Color::White, Type::Rook>  ("../../../../src/res/w_rook_1x_ns.png");
+    setTextureAndSprite<Color::White, Type::Queen> ("../../../../src/res/w_queen_1x_ns.png");
+    setTextureAndSprite<Color::White, Type::King>  ("../../../../src/res/w_king_1x_ns.png");
+
+    setTextureAndSprite<Color::Black, Type::Pawn>  ("../../../../src/res/b_pawn_1x_ns.png");
+    setTextureAndSprite<Color::Black, Type::Knight>("../../../../src/res/b_knight_1x_ns.png");
+    setTextureAndSprite<Color::Black, Type::Bishop>("../../../../src/res/b_bishop_1x_ns.png");
+    setTextureAndSprite<Color::Black, Type::Rook>  ("../../../../src/res/b_rook_1x_ns.png");
+    setTextureAndSprite<Color::Black, Type::Queen> ("../../../../src/res/b_queen_1x_ns.png");
+    setTextureAndSprite<Color::Black, Type::King>  ("../../../../src/res/b_king_1x_ns.png");
+#else
     setTextureAndSprite<Color::White, Type::Pawn>  ("../src/res/w_pawn_1x_ns.png");
     setTextureAndSprite<Color::White, Type::Knight>("../src/res/w_knight_1x_ns.png");
     setTextureAndSprite<Color::White, Type::Bishop>("../src/res/w_bishop_1x_ns.png");
@@ -106,6 +155,7 @@ void ChessPiece::draw(sf::RenderTarget& target, sf::RenderStates states) const
     setTextureAndSprite<Color::Black, Type::Rook>  ("../src/res/b_rook_1x_ns.png");
     setTextureAndSprite<Color::Black, Type::Queen> ("../src/res/b_queen_1x_ns.png");
     setTextureAndSprite<Color::Black, Type::King>  ("../src/res/b_king_1x_ns.png");
+#endif
 }
 
 sf::Sprite& ChessPiece::sprite()
@@ -118,10 +168,10 @@ sf::Sprite& ChessPiece::sprite()
     auto const t = type();
 
     if (color() == Color::White) {
-        return whiteSprites_[static_cast<size_t>(t)];
+        return *(whiteSprites_)[static_cast<size_t>(t)];
     }
 
-    return blackSprites_[static_cast<size_t>(t)];
+    return *(blackSprites_)[static_cast<size_t>(t)];
 }
 
 sf::Sprite& ChessPiece::sprite() const
@@ -134,10 +184,10 @@ sf::Sprite& ChessPiece::sprite() const
     auto const t = type();
 
     if (color() == Color::White) {
-        return whiteSprites_[static_cast<size_t>(t)];
+        return *(whiteSprites_)[static_cast<size_t>(t)];
     }
 
-    return blackSprites_[static_cast<size_t>(t)];
+    return *(blackSprites_)[static_cast<size_t>(t)];
 }
 
 template<ChessPiece::Color C, ChessPiece::Type T> 
@@ -154,14 +204,18 @@ template<ChessPiece::Color C, ChessPiece::Type T>
 }
 
 template<ChessPiece::Type T> 
-/*static*/ void ChessPiece::setTextureAndSpriteImpl(std::array<sf::Texture, 6>& textures, 
-                                                    std::array<sf::Sprite, 6>& sprites,
+/*static*/ void ChessPiece::setTextureAndSpriteImpl(DeferredArray<sf::Texture, 6>& textures, 
+                                                    DeferredArray<sf::Sprite, 6>& sprites,
                                                     std::string const & fileName)
 {
     static constexpr auto index = static_cast<size_t>(T);
-    auto const result = textures[index].loadFromFile(fileName);
+
+    textures[index] = sf::Texture();
+    sprites[index] = sf::Sprite();
+
+    auto const result = textures[index].value().loadFromFile(fileName);
     
-    sprites[index].setTexture(textures[index]);
+    sprites[index].value().setTexture(*(textures)[index]);
 
     assert(result);
 }
